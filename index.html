@@ -61,41 +61,26 @@
     class MyControl {
       constructor() {
         this.updateTimer = null;
-        this.lastUpdateTime = 0;
         this.url = null;
-        this.retryCount = 0;
-        this.maxRetries = 3;
       }
 
       onAdd(map) {
         this._map = map;
         this.update();
-        this.updateTimer = setInterval(() => this.update(), 5 * 60 * 1000);
+        this.updateTimer = setInterval(() => this.update(), 1000); // Update every second
         return null;
       }
 
       async update() {
-        const now = Date.now();
-        if (now - this.lastUpdateTime < 5 * 60 * 1000) return;
-
-        this.lastUpdateTime = now;
-
         try {
           const newUrl = await this.fetchNowcastUrl();
           if (this.url !== newUrl) {
             this.url = newUrl;
             this.updateLayer();
-            this.retryCount = 0;
           }
         } catch (error) {
-          if (this.retryCount < this.maxRetries) {
-            this.retryCount++;
-            console.warn("Retrying Nowcast URL fetch. Attempt:", this.retryCount);
-            this.update();
-          } else {
-            console.error("Error fetching Nowcast URL: " + error.message);
-            alert("Error fetching Nowcast URL: " + error.message);
-          }
+          console.error("Error fetching Nowcast URL: " + error.message);
+          alert("Error fetching Nowcast URL: " + error.message);
         }
       }
 
