@@ -84,7 +84,7 @@
         const json = await res.json();
         const basetime = json[0].basetime;
         const time = json[0].targetTime || basetime;
-        return `https://www.jma.go.jp/bosai/jmatile/data/nowc/${basetime}/none/${time}/surf/hrpns/{z}/{x}/{y}@2x.png`; // High resolution tiles
+        return `https://www.jma.go.jp/bosai/jmatile/data/nowc/${basetime}/none/${time}/surf/hrpns/{z}/{x}/{y}.png`; // 高解像度タイル
       }
 
       updateLayer() {
@@ -96,7 +96,7 @@
           map.addSource(key, {
             "type": "raster",
             "tiles": [this.url],
-            "tileSize": 512, // Increased tile size for high resolution
+            "tileSize": 256, // タイルサイズを256に設定
             "maxzoom": 10,
             "minzoom": 4
           });
@@ -151,9 +151,9 @@
         "gsi_base": {
           "type": "raster",
           "tiles": [
-            "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}@2x.png" // High resolution tiles
+            "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png" // 通常解像度タイル
           ],
-          "tileSize": 512 // Increased tile size for high resolution
+          "tileSize": 256 // タイルサイズを256に設定
         }
       },
       "layers": [
@@ -184,8 +184,8 @@
     };
 
     const bounds = [
-      [120.0, 20.0],  // Expanded western bound
-      [156.0, 50.0]   // Expanded eastern bound
+      [120.0, 20.0],  // 西側境界
+      [156.0, 50.0]   // 東側境界
     ];
 
     const map = new maplibregl.Map({
@@ -194,8 +194,7 @@
       zoom: 4,
       style: style,
       pitch: 0, // 固定ピッチ設定
-      bearing: 0, // 固定ベアリング設定
-      maxTileCacheSize: 10 // Ensuring high performance with high resolution
+      bearing: 0 // 固定ベアリング設定
     });
 
     // ピッチとベアリングを固定
@@ -204,7 +203,7 @@
 
     map.on('load', () => {
       map.setMaxBounds(bounds);
-      map.setMaxZoom(12);  // Increased max zoom level
+      map.setMaxZoom(12);  // 最大ズームレベル
       map.setMinZoom(4);
     });
 
