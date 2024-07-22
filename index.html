@@ -97,7 +97,7 @@
             "type": "raster",
             "tiles": [this.url],
             "tileSize": 256,
-            "maxzoom": 10,
+            "maxzoom": 12, // High-resolution max zoom level
             "minzoom": 4
           });
           map.addLayer({
@@ -105,7 +105,7 @@
             "type": "raster",
             "source": key,
             "minzoom": 4,
-            "maxzoom": 18,
+            "maxzoom": 12, // High-resolution max zoom level
             "paint": {
               "raster-opacity": 1.0,
               "raster-resampling": "nearest",
@@ -193,11 +193,11 @@
       center: [137.7749, 35.6586],
       zoom: 4,
       style: style,
-      pitch: 0, // 固定ピッチ設定
-      bearing: 0 // 固定ベアリング設定
+      pitch: 0,
+      bearing: 0
     });
 
-    // ピッチとベアリングを固定
+    // Keep pitch and bearing fixed
     map.on('pitchstart', () => map.setPitch(0));
     map.on('rotate', () => map.setBearing(0));
 
@@ -205,10 +205,10 @@
       map.setMaxBounds(bounds);
       map.setMaxZoom(12);  // Increased max zoom level
       map.setMinZoom(4);
+      map.addControl(new MyControl()); // Add control after the map is loaded
     });
 
-    map.addControl(new MyControl());
-
+    // Adjust map container size on window resize
     function onResize() {
       const mapContainer = document.getElementById('map');
       mapContainer.style.width = `${window.innerWidth}px`;
