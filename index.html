@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>地理院地図表示</title>
+  <title>ナウキャスト</title>
   <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width" />
   <link rel="icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="favicon.ico">
@@ -184,8 +184,8 @@
     };
 
     const bounds = [
-      [122.5, 20.0],
-      [153.0, 45.5]
+      [120.0, 20.0],  // Expanded western bound
+      [156.0, 50.0]   // Expanded eastern bound
     ];
 
     const map = new maplibregl.Map({
@@ -193,13 +193,17 @@
       center: [137.7749, 35.6586],
       zoom: 4,
       style: style,
-      pitch: 0,
-      bearing: 0
+      pitch: 0, // 固定ピッチ設定
+      bearing: 0 // 固定ベアリング設定
     });
+
+    // ピッチとベアリングを固定
+    map.on('pitchstart', () => map.setPitch(0));
+    map.on('rotate', () => map.setBearing(0));
 
     map.on('load', () => {
       map.setMaxBounds(bounds);
-      map.setMaxZoom(8);
+      map.setMaxZoom(12);  // Increased max zoom level
       map.setMinZoom(4);
     });
 
