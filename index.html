@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>ナウキャスト</title>
-  <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, width=device-width" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="icon" href="favicon.ico">
   <link rel="apple-touch-icon" href="favicon.ico">
   <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@1.14.0/dist/maplibre-gl.css" />
@@ -21,7 +21,6 @@
       left: 0;
       width: 100vw;
       height: 100vh;
-      overflow: hidden;
     }
 
     #clock {
@@ -111,7 +110,7 @@
             }
           });
         } else {
-          source.setTiles([this.url]);
+          source.tiles = [this.url];
           map.style.sourceCaches[key].clearTiles();
           map.style.sourceCaches[key].update(map.transform);
           map.triggerRepaint();
@@ -201,9 +200,9 @@
       map.setMaxBounds(bounds);
       map.setMaxZoom(12);
       map.setMinZoom(4);
+      const control = new MyControl();
+      map.addControl(control);
     });
-
-    map.addControl(new MyControl());
 
     function onResize() {
       const mapContainer = document.getElementById('map');
