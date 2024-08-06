@@ -15,7 +15,6 @@
       overflow: hidden;
       height: 100%;
     }
-
     #map {
       position: absolute;
       top: 0;
@@ -23,7 +22,6 @@
       width: 100vw;
       height: 100vh;
     }
-
     #clock {
       position: absolute;
       top: 10px;
@@ -34,7 +32,6 @@
       font-size: 14px;
       font-family: Arial, sans-serif;
     }
-
     #attribution {
       position: absolute;
       bottom: 10px;
@@ -61,11 +58,12 @@
     class MyControl {
       constructor() {
         this.url = null;
+        this.updateInterval = 1000;
       }
 
       onAdd(map) {
         this._map = map;
-        this.update();
+        this.setUpdateInterval();
         return null;
       }
 
@@ -112,10 +110,22 @@
           });
         } else {
           source.tiles = [this.url];
-          map.style.sourceCaches[key].clearTiles();
+          map.style.sourceCaches[key]._tiles = {};
           map.style.sourceCaches[key].update(map.transform);
           map.triggerRepaint();
         }
+      }
+
+      setUpdateInterval() {
+        const updateNow = () => {
+          this.update();
+          setInterval(() => this.update(), this.updateInterval);
+        };
+
+        const now = new Date();
+        const seconds = now.getSeconds();
+        const millisecondsUntilNextSecond = (1000 - now.getMilliseconds());
+        setTimeout(updateNow, millisecondsUntilNextSecond);
       }
 
       onRemove() {
@@ -187,7 +197,7 @@
 
     const map = new maplibregl.Map({
       container: "map",
-      center: [137.0, 38.0], // 修正後の初期中心地
+      center: [137.0, 38.0],
       zoom: 4,
       style: style,
       pitch: 0,
@@ -217,4 +227,4 @@
   </script>
 </body>
 
-</html
+</html>
