@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>降水ナウキャスト</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="favicon.ico">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@1.14.0/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/maplibre-gl@1.14.0/dist/maplibre-gl.js"></script>
+  <style>
+    body, html {
+      margin: 0;
+      overflow: hidden;
+      height: 100%;
+    }
+    #map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+    }
+    #clock {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 10px;
+      border-radius: 3px;
+      font-size: 14px;
+      font-family: Arial, sans-serif;
+    }
+    #attribution {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(255, 255, 255, 0.8);
+      padding: 5px;
+      border-radius: 3px;
+      font-size: 12px;
+      font-family: Arial, sans-serif;
+      max-width: 200px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="map"></div>
+  <div id="clock"></div>
+  <div id="attribution">
+    <div><a href="https://maps.gsi.go.jp/" target="_blank" rel="noopener noreferrer">地理院地図</a></div>
+    <div><a href="https://www.jma.go.jp/bosai/nowc/" target="_blank" rel="noopener noreferrer">気象庁ナウキャスト</a></div>
+  </div>
+  <script>
+    class MyControl {
+      constructor() {
+        this.url = null;
+        this.updateInterval = 1000;
+      }
+
+      onAdd(map) {
+        this._map = map;
+        this.setUpdateInterval();
+        return null;
+      }
+
+      async update() {
+        const newUrl = await this.fetchNowcastUrl();
+        if (this.url !== newUrl) {
+          this.url = newUrl;
+          this.updateLayer();
+        }
+      }
+
+      async fetchNowcastUrl() {
+        const res = await fetch("https://www.jma.go.jp/bosai/jmatile/data/nowc/targetTimes_N1.json");
+        const json = await res.json();
+        const basetime = json[0].basetime;
+        const time = json[0].targetTime || basetime;
+        return `https://www.jma.go.jp/bosai/jmatile/data/nowc/${basetime}/none/${time}/surf/hrpns/{z}/{x}/{y}.png`;
+      }
+
+      updateLayer() {
+        const key = "jma_hrpns";
+        const map = this._map;
+        let source = map.getSource(key);
+
+        if (!source) {
+          map.addSource(key, {
+            "type": "raster",
+            "tiles": [this.url],
+            "tileSize": 256,
+            "maxzoom": 10,
+            "minzoom": 4
+          });
+          map.addLayer({
+            "id": "jma_hrpns",
+            "type": "raster",
+            "source": key,
+            "minzoom": 4,
+            "maxzoom": 18,
+            "paint": {
+              "raster-opacity": 1.0,
+              "raster-resampling": "nearest",
+              "raster-fade-duration": 0
+            }
+          });
+        } else {
+          source.tiles = [this.url];
+          map.style.sourceCaches[key]._tiles = {};
+          map.style.sourceCaches[key].update(map.transform);
+          map.triggerRepaint();
+        }
+      }
+
+      setUpdateInterval() {
+        const updateNow = () => {
+          this.update();
+          setInterval(() => this.update(), this.updateInterval);
+        };
+
+        const now = new Date();
+        const seconds = now.getSeconds();
+        const millisecondsUntilNextSecond = (1000 - now.getMilliseconds());
+        setTimeout(updateNow, millisecondsUntilNextSecond);
+      }
+
+      onRemove() {
+        this._map = undefined;
+      }
+
+      getDefaultPosition() {
+        return 'top-left';
+      }
+    }
+
+    function updateClock() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day}`;
+      const timeStr = `${hours}:${minutes}:${seconds}`;
+      document.getElementById('clock').textContent = `${dateStr} ${timeStr}`;
+    }
+
+    setInterval(updateClock, 1000);
+
+    const style = {
+      "version": 8,
+      "sources": {
+        "gsi_base": {
+          "type": "raster",
+          "tiles": [
+            "https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png"
+          ],
+          "tileSize": 256
+        }
+      },
+      "layers": [
+        {
+          "id": "background",
+          "type": "background",
+          "paint": {
+            "background-color": "#ffffff"
+          }
+        },
+        {
+          "id": "gsi_base",
+          "type": "raster",
+          "source": "gsi_base",
+          "minzoom": 0,
+          "maxzoom": 18,
+          "paint": {
+            "raster-saturation": -1
+          }
+        }
+      ],
+      "metadata": {
+        "attribution": {
+          "text": "地理院地図 © <a href='https://maps.gsi.go.jp/' target='_blank' rel='noopener noreferrer'>GSI</a> | 気象庁ナウキャスト © <a href='https://www.jma.go.jp/bosai/nowc/' target='_blank' rel='noopener noreferrer'>JMA</a>",
+          "url": "https://www.jma.go.jp/bosai/nowc/"
+        }
+      }
+    };
+
+    const bounds = [
+      [120.0, 20.0],
+      [156.0, 50.0]
+    ];
+
+    const map = new maplibregl.Map({
+      container: "map",
+      center: [137.0, 38.0],
+      zoom: 4,
+      style: style,
+      pitch: 0,
+      bearing: 0
+    });
+
+    map.on('pitchstart', () => map.setPitch(0));
+    map.on('rotate', () => map.setBearing(0));
+
+    map.on('load', () => {
+      map.setMaxBounds(bounds);
+      map.setMaxZoom(12);
+      map.setMinZoom(4);
+      const control = new MyControl();
+      map.addControl(control);
+    });
+
+    function onResize() {
+      const mapContainer = document.getElementById('map');
+      mapContainer.style.width = '100vw';
+      mapContainer.style.height = '100vh';
+      map.resize();
+    }
+
+    window.addEventListener('resize', onResize);
+    onResize();
+  </script>
+</body>
+
+</html>
